@@ -184,31 +184,134 @@
   window.scrollTo({ top: 0, behavior: 'auto' });
 
   let current = friendStart;
+  let helped = false;
 
+  const prefersReduced = () =>
+    window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // 复用 style.css 里已有的 .particle / .float-plus 与 burst、plusRise 关键帧，
+  // 保证助力页的动效与原玩法观感一致
+  function burst(count) {
+    if (prefersReduced()) return;
+    const host = $('effects');
+    if (!host) return;
+    const symbols = ['✦', '★', '🪙', '💎', '✧'];
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('span');
+      p.className = 'particle';
+      p.textContent = symbols[i % symbols.length];
+      p.style.left = (44 + Math.random() * 12) + '%';
+      p.style.top = (46 + Math.random() * 14) + '%';
+      p.style.setProperty('--dx', ((Math.random() - 0.5) * 300) + 'px');
+      p.style.setProperty('--dy', ((Math.random() - 0.35) * 380) + 'px');
+      p.style.setProperty('--rot', ((Math.random() - 0.5) * 540) + 'deg');
+      host.appendChild(p);
+      setTimeout(() => p.remove(), 1300);
+    }
+  }
+
+  function floatPlus(text) {
+    if (prefersReduced()) return;
+    const host = $('effects');
+    if (!host) return;
+    const el = document.createElement('div');
+    el.className = 'float-plus';
+    el.textContent = text;
+    host.appendChild(el);
+    setTimeout(() => el.remove(), 1200);
+  }
+
+  // ---------------- 「你也获得机会」弹窗 ----------------
+  let rewardOverlay = null;
+  let lastFocus = null;
+
+  function buildRewardModal() {
+    const wrap = document.createElement('div');
+    wrap.className = 'boost-overlay';
+    wrap.id = 'boostReward';
+    wrap.setAttribute('role', 'dialog');
+    wrap.setAttribute('aria-modal', 'true');
+    wrap.setAttribute('aria-labelledby', 'boostRewardTitle');
+    wrap.innerHTML = [
+      '<div class="boost-modal">',
+      '  <div class="boost-modal-art" aria-hidden="true">🎁</div>',
+      '  <div class="boost-modal-kicker">助力成功</div>',
+      '  <h3 id="boostRewardTitle">你也获得 1 次抽奖机会</h3>',
+      '  <p>你帮好友推进了福利金，系统也为你点亮了 1 次机会。来看看自己能抽到多少。</p>',
+      '  <button class="boost-modal-primary" id="boostRewardPlay" type="button">马上抽奖 <span aria-hidden="true">›</span></button>',
+      '  <button class="boost-modal-secondary" id="boostRewardLater" type="button">稍后再说</button>',
+      '</div>',
+    ].join('');
+    document.body.appendChild(wrap);
+    return wrap;
+  }
+
+  function showReward() {
+    if (!rewardOverlay) rewardOverlay = buildRewardModal();
+    lastFocus = document.activeElement;
+    // 下一帧再加 open，保证入场动画会播放
+    requestAnimationFrame(() => rewardOverlay.classList.add('open'));
+    const play = $('boostRewardPlay');
+    const later = $('boostRewardLater');
+    play.onclick = () => { closeReward(); goPlay(); };
+    later.onclick = () => { closeReward(); $('boostSkipBtn').focus(); };
+    setTimeout(() => play.focus(), 120);
+  }
+
+  function closeReward() {
+    if (!rewardOverlay) return;
+    rewardOverlay.classList.remove('open');
+    if (lastFocus && lastFocus.isConnected) lastFocus.focus();
+  }
+
+  function rewardOpen() {
+    return !!rewardOverlay && rewardOverlay.classList.contains('open');
+  }
+
+  // ---------------- 助力点击 ----------------
   function markHelped() {
-    current = Math.min(GOAL, Number((current + HELP_GAIN).toFixed(2)));
-
-    boost.querySelector('.boost-amount strong').textContent = fmt(current);
-    boost.querySelector('.boost-track > span').style.width =
-      Math.min(99.98, (current / GOAL) * 100) + '%';
-    const gap = Math.max(0, GOAL - current);
-    boost.querySelector('.boost-gap').textContent = gap <= 0
-      ? 'TA 已经攒满啦！' : '还差 ¥' + fmt(gap);
+    if (helped) return;
+    helped = true;
 
     const btn = $('boostHelpBtn');
+    const amountStrong = boost.querySelector('.boost-amount strong');
+    const track = boost.querySelector('.boost-track > span');
+    const gapEl = boost.querySelector('.boost-gap');
+
+    // 1) 按钮按压反馈：先弹一下再落到「已完成」态
+    btn.classList.add('pressed');
     btn.disabled = true;
     btn.textContent = '✓ 助力成功，感谢你';
 
+    // 2) 数值与进度推进（数值带 pop 动画，进度条走 CSS 过渡）
+    current = Math.min(GOAL, Number((current + HELP_GAIN).toFixed(2)));
+    amountStrong.textContent = fmt(current);
+    amountStrong.classList.remove('pop');
+    void amountStrong.offsetWidth;
+    amountStrong.classList.add('pop');
+    track.style.width = Math.min(99.98, (current / GOAL) * 100) + '%';
+    const gap = Math.max(0, GOAL - current);
+    gapEl.textContent = gap <= 0 ? 'TA 已经攒满啦！' : '还差 ¥' + fmt(gap);
+    gapEl.classList.remove('pop');
+    void gapEl.offsetWidth;
+    gapEl.classList.add('pop');
+
+    // 3) 粒子 + 飘字，让「这一下」有反馈
+    burst(26);
+    floatPlus('+' + fmt(HELP_GAIN));
+
+    // 4) 就地留一条成功态说明（弹窗关闭后仍可见）
     const done = document.createElement('div');
-    done.className = 'boost-done';
+    done.className = 'boost-done open';
     done.innerHTML = [
       '<b>助力成功！</b>',
-      '<span>你帮好友推进了 ¥' + fmt(HELP_GAIN) + '。要不要也来试试手气，看看自己能抽到多少？</span>',
+      '<span>你帮好友推进了 ¥' + fmt(HELP_GAIN) + '，并为自己获得 1 次抽奖机会。</span>',
     ].join('');
     const actions = boost.querySelector('.boost-actions');
     actions.parentNode.insertBefore(done, actions);
 
-    $('boostSkipBtn').focus();
+    // 5) 稍后弹出「你也获得机会」，先让上面的动效播完
+    setTimeout(showReward, prefersReduced() ? 120 : 620);
   }
 
   // 访客决定自己也玩：转成「分享者」身份，把自己的分享参数写进地址栏，
@@ -227,6 +330,8 @@
   $('boostHelpBtn').addEventListener('click', markHelped);
   $('boostSkipBtn').addEventListener('click', goPlay);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !boost.hidden) goPlay();
+    if (e.key !== 'Escape') return;
+    if (rewardOpen()) { closeReward(); return; }   // Esc 先关弹窗
+    if (!boost.hidden) goPlay();
   });
 })();
