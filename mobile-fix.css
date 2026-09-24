@@ -423,7 +423,7 @@
 
   /* ---------- game：转盘面板 502px + 金额卡 209px ---------- */
   .game {
-    padding: 0 0 18px;
+    padding: 0 0 15px;
   }
   .ticker {
     height: 27px;
@@ -431,54 +431,59 @@
     font-size: 11px;
     padding: 5px 14px;
   }
+  /* 「已累计福利金」卡片：本轮重点压缩对象（压缩前占 156px）。
+     只收内部留白与数字尺寸，五行内容（标题/数值/目标/进度条/鼓励语）全部保留，
+     彼此仍留正间距，不做任何叠压。 */
   .amount-card {
-    padding: 13px 15px 11px;
+    padding: 10px 14px 8px;
     border-radius: 15px;
-    box-shadow: 0 6px 0 #ac141d, 0 11px 17px #74051477;
+    box-shadow: 0 5px 0 #ac141d, 0 9px 15px #74051477;
   }
   .amount-top {
-    font-size: 12px;
+    font-size: 11px;
   }
   .amount-top .limit {
     font-size: 10px;
-    padding: 4px 7px;
+    padding: 3px 7px;
   }
   .amount {
-    margin: 8px 0 2px;
+    /* 下边距留 3px：实测 1px 时「数值 -> 目标行」几乎贴死 */
+    margin: 5px 0 3px;
   }
   .amount small {
-    font-size: 25px;
+    font-size: 20px;
   }
   .amount strong {
-    font-size: clamp(46px, 12vw, 58px);
+    font-size: clamp(38px, 10.5vw, 50px);
   }
   .amount-goal {
     font-size: 11px;
   }
   .amount-goal span:first-child {
-    font-size: 12px;
+    font-size: 11px;
   }
   .cash-track {
-    height: 13px;
-    margin-top: 7px;
+    height: 11px;
+    margin-top: 6px;
   }
   .cash-track i {
-    width: 13px;
-    height: 13px;
+    width: 11px;
+    height: 11px;
     border-width: 2px;
   }
   .micro-win {
-    margin-top: 6px;
-    font-size: 12px;
+    margin-top: 5px;
+    font-size: 11px;
   }
+  /* 商品条保持独立一张卡（不做并入），只收高度 */
   .game-product {
-    margin: 10px 0 9px;
-    min-height: 56px;
-    padding: 6px 10px 6px 2px;
+    margin: 8px 0 8px;
+    min-height: 50px;
+    padding: 5px 10px 5px 2px;
   }
   .game-product img {
-    width: 58px;
-    height: 44px;
+    width: 52px;
+    height: 40px;
   }
   .game-product b {
     font-size: 13px;
@@ -488,7 +493,7 @@
     margin-top: 3px;
   }
   .game-panel {
-    padding: 13px 11px 15px;
+    padding: 11px 11px 13px;
     border-radius: 18px;
     box-shadow: inset 0 0 0 2px #fff9ba, 0 7px 0 #9d291c, 0 13px 19px #64081170;
   }
@@ -501,41 +506,45 @@
   }
   .phase-sub {
     font-size: 12px;
-    margin: 2px 0 7px;
+    margin: 2px 0 5px;
   }
 
-  /* 转盘 300 -> 246：半径为原尺寸的 0.82 倍，标签位移按 106*0.82≈87 换算 */
+  /* 转盘 300 -> 224：标签位移必须按比例换算，106 * 224/300 ≈ 79，
+     否则扇区文字会脱离扇区（已用几何断言验证） */
   .wheel-wrap {
-    width: min(100%, 246px);
-    margin: 8px auto 12px;
+    width: min(100%, 224px);
+    margin: 9px auto 10px;
   }
   .wheel-label {
-    width: 62px;
-    font-size: 11px;
-    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-87px) rotate(var(--reverse));
+    width: 58px;
+    font-size: 10px;
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-79px) rotate(var(--reverse));
   }
   .wheel-center {
-    width: 62px;
-    height: 62px;
+    width: 58px;
+    height: 58px;
     border-width: 4px;
-    font-size: 19px;
+    font-size: 18px;
   }
   .wheel-leds {
-    inset: -7px;
+    inset: -6px;
     box-shadow: 0 0 0 3px #c92d20, 0 0 0 6px #ffefa5;
   }
+  /* 指针：副标题下边距 5 + 转盘上边距 9 = 14px 净空，
+     指针上探 8px < 14px，实测余 6px，不压副标题
+     （此前 top:-16/高24 时指针压住了副标题文字，已修） */
   .pointer {
-    top: -18px;
-    border-left-width: 13px;
-    border-right-width: 13px;
-    border-top-width: 26px;
+    top: -8px;
+    border-left-width: 11px;
+    border-right-width: 11px;
+    border-top-width: 17px;
   }
   .encouragement {
     font-size: 12px;
-    margin: 10px 0 0;
+    margin: 7px 0 0;
   }
   .game-panel .primary.action {
-    padding: 14px 18px;
+    padding: 11px 16px;
     font-size: 17px;
   }
   .currency-card {
@@ -553,7 +562,10 @@
     margin-top: 9px;
   }
   .bottom-actions {
-    margin: 13px 0 4px;
+    margin: 10px 0 4px;
+  }
+  .bottom-actions button {
+    padding: 9px 8px;
   }
 
   /* ---------- ending ---------- */
@@ -583,56 +595,130 @@
 }
 
 /* 超小屏（<=380px）再收一档：这类机型屏高普遍 640 上下，
-   转盘与金额卡是纵向大头。半径同样按 0.3533 比例换算：214*0.3533≈76 */
+   转盘与金额卡是纵向大头。半径同样按比例换算：106 * 180/300 ≈ 64 */
 @media (max-width: 380px) {
+  .game {
+    padding: 0 0 10px;
+  }
   .wheel-wrap {
-    width: min(100%, 214px);
-    margin: 6px auto 10px;
+    width: min(100%, 170px);
+    margin: 8px auto 7px;
   }
   .wheel-label {
-    width: 56px;
+    width: 50px;
     font-size: 10px;
-    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-76px) rotate(var(--reverse));
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-60px) rotate(var(--reverse));
   }
   .wheel-center {
-    width: 54px;
-    height: 54px;
-    font-size: 17px;
+    width: 46px;
+    height: 46px;
+    font-size: 16px;
   }
   .wheel-leds {
-    inset: -6px;
+    inset: -5px;
   }
   .pointer {
-    top: -15px;
-    border-left-width: 11px;
-    border-right-width: 11px;
-    border-top-width: 22px;
+    top: -8px;
+    border-left-width: 10px;
+    border-right-width: 10px;
+    border-top-width: 16px;
   }
   .amount-card {
-    padding: 11px 13px 9px;
+    padding: 9px 13px 7px;
   }
   .amount strong {
-    font-size: clamp(40px, 11vw, 48px);
+    font-size: clamp(30px, 9vw, 40px);
   }
   .amount small {
-    font-size: 22px;
+    font-size: 17px;
+  }
+  .micro-win {
+    margin-top: 4px;
+    font-size: 10px;
   }
   .game-product {
-    min-height: 50px;
-    margin: 8px 0 7px;
+    min-height: 46px;
+    margin: 5px 0 5px;
   }
   .game-product img {
-    width: 50px;
-    height: 38px;
+    width: 46px;
+    height: 34px;
   }
   .game-panel {
-    padding: 11px 10px 13px;
+    padding: 9px 10px 11px;
+  }
+  .phase-sub {
+    margin: 2px 0 6px;
+  }
+  .game-panel .primary.action {
+    padding: 10px 14px;
+    font-size: 16px;
+  }
+  .encouragement {
+    margin: 4px 0 0;
+    font-size: 11px;
   }
   .bottom-actions {
-    margin: 10px 0 3px;
+    margin: 7px 0 3px;
   }
   .bottom-actions button {
     padding: 10px 6px;
     font-size: 12px;
+  }
+}
+
+/* scan 在超小屏单独再收一档：此屏内容高度与屏宽无关（743px），
+   在 640 高的机型上必然溢出，只能靠收控件高度逼近。
+   小票与识别结果区都保留，只压留白与字号。 */
+@media (max-width: 380px) {
+  .scan {
+    padding: 10px 0 14px;
+  }
+  .scan-label {
+    font-size: 11px;
+    padding: 4px 11px;
+  }
+  .scan h2 {
+    font-size: 24px;
+    margin: 8px 0 11px;
+  }
+  .receipt {
+    padding: 10px 13px 12px;
+  }
+  .receipt-top {
+    padding-bottom: 6px;
+    font-size: 10px;
+  }
+  .receipt-symbol {
+    font-size: 40px;
+    padding: 4px 0 2px;
+  }
+  .receipt-row {
+    padding: 6px 0;
+    font-size: 12px;
+  }
+  .scan-progress {
+    margin: 11px auto 5px;
+  }
+  .scan-reveal {
+    margin: 9px 0 0;
+  }
+  .reveal-flash {
+    font-size: 12px;
+    padding: 5px 11px;
+  }
+  .scan-reveal h3 {
+    font-size: 21px;
+    margin: 7px 0 3px;
+  }
+  .scan-reveal p {
+    margin: 3px 0 13px;
+  }
+  .scan-reveal strong {
+    font-size: 17px;
+  }
+  .scan-reveal .primary {
+    padding: 13px 20px;
+    font-size: 17px;
   }
 }
