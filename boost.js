@@ -1,48 +1,126 @@
 /* ==========================================================================
-   好友助力落地页
+   好友助力落地页 + 分享参数同步
    ==========================================================================
-   纯前端：好友带 ?from=昵称&av=金额 进来，先看到「帮 TA 助力」页。
-   无后端，助力是演出式交互，不做真实数据上报。
-   独立文件，不修改 app.js 原有逻辑。
+   两条职责：
+
+   A. 让分享链接天然带参数
+      微信右上角「···」原生分享、长按复制地址，用的都是**当前地址栏 URL**。
+      原先只有点页面内「分享助力」按钮才拼 ?from=，所以用微信原生转发出去的
+      永远是裸链，好友看不到助力页。这里在页面加载时就把参数写进地址栏，
+      并在福利金变化时持续同步，任何转发方式都带参数。
+
+   B. 访客判定
+      分享者本机不能看到自己的助力页。
+      用 sessionStorage 标记「本机是分享者」：好友在微信里是新会话，
+      标记不存在，因此正常看到助力页；分享者刷新自己的页面则不会误判。
+
+   纯前端，无后端。
    ========================================================================== */
 (() => {
   'use strict';
 
   const $ = (id) => document.getElementById(id);
+  const SHARER_KEY = 'kfc_is_sharer';
+  const NAME_KEY = 'kfc_share_name';
+  const GOAL = 50;
+  const HELP_GAIN = 0.01;
+  const SCREENS = ['entry', 'scan', 'game', 'ending'];
+
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  };
+  const sess = {
+    get(k) { try { return sessionStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { sessionStorage.setItem(k, v); } catch {} },
+  };
+
+  const fmt = (n) => n.toFixed(2);
+
+  // 自己的福利金：优先读游戏区实时数值（app.js 在维护）
+  let fallbackCash = null;
+  function ownCash() {
+    const el = $('cashValue');
+    const v = el ? parseFloat(el.textContent) : NaN;
+    if (Number.isFinite(v) && v > 0) return Number(v.toFixed(2));
+    // 还没抽过奖时给一个接近目标的演出值，
+    // 否则好友看到「还差 ¥50」很出戏。缓存住，避免每次同步都变。
+    if (fallbackCash == null) fallbackCash = Number((45.5 + Math.random() * 3.4).toFixed(2));
+    return fallbackCash;
+  }
+
+  function shareParams() {
+    const name = (store.get(NAME_KEY) || '').trim().slice(0, 12) || '好友';
+    return '?from=' + encodeURIComponent(name) + '&av=' + encodeURIComponent(fmt(ownCash()));
+  }
+
+  // 把分享参数写进地址栏；og:url 一并同步
+  function syncUrl() {
+    const next = location.pathname + shareParams() + location.hash;
+    const now = location.pathname + location.search + location.hash;
+    if (now !== next) {
+      try { history.replaceState(null, '', next); } catch {}
+    }
+    const og = document.querySelector('meta[property="og:url"]');
+    // file:// 下 origin 是 "null"，此时不写 og:url
+    if (og && location.origin && location.origin !== 'null') {
+      og.setAttribute('content', location.origin + next);
+    }
+  }
+
   const params = new URLSearchParams(location.search);
+  const fromParam = (params.get('from') || '').trim();
+  const isSharer = sess.get(SHARER_KEY) === '1';
 
-  // 没带 from 参数 = 自己正常打开，交给原页面逻辑，什么都不做
-  const from = (params.get('from') || '').trim();
-  if (!from) return;
+  // 暴露给 app.js：分享时同步一次地址栏
+  window.__kfcSyncShareUrl = syncUrl;
 
-  // 解码 + 截断，防超长昵称撑破布局
-  let nickname = from;
-  try {
-    nickname = decodeURIComponent(from);
-  } catch {}
-  nickname = nickname.slice(0, 12) || '好友';
+  // ------------------------------------------------------------------
+  // 场景二：分享者本人（无 from 参数，或本机已被标记为分享者）
+  // 不显示助力页，只负责让地址栏带上分享参数。
+  // ------------------------------------------------------------------
+  if (!fromParam || isSharer) {
+    sess.set(SHARER_KEY, '1');
+    syncUrl();
 
-  // 对方金额：优先读 av，非法值就退到一个合理随机数
+    const cashEl = $('cashValue');
+    if (cashEl && window.MutationObserver) {
+      new MutationObserver(syncUrl).observe(cashEl, {
+        childList: true, characterData: true, subtree: true,
+      });
+    }
+    // 昵称改了也要同步到地址栏。
+    // 注意：#shareName 是 openModal() 动态创建的，加载时还不存在，
+    // 所以必须用事件委托，不能直接对它 addEventListener。
+    document.addEventListener('input', (e) => {
+      const t = e.target;
+      if (t && t.id === 'shareName') {
+        store.set(NAME_KEY, t.value);
+        syncUrl();
+      }
+    });
+    return;
+  }
+
+  // ------------------------------------------------------------------
+  // 场景一：真正的访客（带 from 参数）→ 显示助力页
+  // ------------------------------------------------------------------
+  let nickname = fromParam;
+  try { nickname = decodeURIComponent(fromParam); } catch {}
+  nickname = (nickname || '').slice(0, 12) || '好友';
+
   const rawAv = parseFloat(params.get('av'));
-  const friendCash = Number.isFinite(rawAv) && rawAv >= 0 && rawAv <= 50
+  const friendStart = Number.isFinite(rawAv) && rawAv >= 0 && rawAv <= GOAL
     ? Number(rawAv.toFixed(2))
     : Number((45 + Math.random() * 4.5).toFixed(2));
 
-  const HELP_GAIN = 0.01; // 一次助力推进的金额（演出用）
-  const GOAL = 50;
-
-  function fmt(n) {
-    return n.toFixed(2);
-  }
-
-  // ---- 构建助力页 DOM ----
-  function buildBoostScreen() {
+  function buildBoost() {
     const section = document.createElement('section');
     section.className = 'screen boost';
     section.id = 'boost';
 
-    const gap = Math.max(0, GOAL - friendCash);
-    const progress = Math.min(99.98, (friendCash / GOAL) * 100);
+    const gap = Math.max(0, GOAL - friendStart);
+    const progress = Math.min(99.98, (friendStart / GOAL) * 100);
 
     section.innerHTML = [
       '<div class="boost-from">',
@@ -63,57 +141,45 @@
       '<p class="boost-note">娱乐互动 · 非肯德基或拼多多官方活动<br>助力为互动演示，不涉及真实奖励发放</p>',
     ].join('');
 
-    // 填动态文本（用 textContent 避免昵称注入 HTML）
     section.querySelector('.boost-from b').textContent = nickname;
-    section.querySelector('.boost-amount strong').textContent = fmt(friendCash);
+    section.querySelector('.boost-amount strong').textContent = fmt(friendStart);
     section.querySelector('.boost-gap').textContent = gap <= 0
-      ? 'TA 已经攒满啦！'
-      : '还差 ¥' + fmt(gap);
+      ? 'TA 已经攒满啦！' : '还差 ¥' + fmt(gap);
+
     const fill = section.querySelector('.boost-track > span');
-    // 下一帧再设宽度，让过渡动画生效
-    requestAnimationFrame(() => {
-      fill.style.width = progress + '%';
-    });
+    requestAnimationFrame(() => { fill.style.width = progress + '%'; });
 
     return section;
   }
 
-  // ---- 挂载：插到 #app 里，隐藏其他屏 ----
   const app = $('app');
   if (!app) return;
 
-  const boost = buildBoostScreen();
+  const boost = buildBoost();
   app.appendChild(boost);
 
-  const SCREENS = ['entry', 'scan', 'game', 'ending'];
   SCREENS.forEach((id) => {
     const el = $(id);
     if (el) el.hidden = true;
   });
   window.scrollTo({ top: 0, behavior: 'auto' });
 
-  // 助力完成后：把对方进度推进一点，并引导来访者自己也玩
-  let helped = false;
+  let current = friendStart;
 
   function markHelped() {
-    helped = true;
-    let current = friendCash;
     current = Math.min(GOAL, Number((current + HELP_GAIN).toFixed(2)));
 
-    const fill = boost.querySelector('.boost-track > span');
-    const amount = boost.querySelector('.boost-amount strong');
-    const gapEl = boost.querySelector('.boost-gap');
-
-    amount.textContent = fmt(current);
-    fill.style.width = Math.min(99.98, (current / GOAL) * 100) + '%';
+    boost.querySelector('.boost-amount strong').textContent = fmt(current);
+    boost.querySelector('.boost-track > span').style.width =
+      Math.min(99.98, (current / GOAL) * 100) + '%';
     const gap = Math.max(0, GOAL - current);
-    gapEl.textContent = gap <= 0 ? 'TA 已经攒满啦！' : '还差 ¥' + fmt(gap);
+    boost.querySelector('.boost-gap').textContent = gap <= 0
+      ? 'TA 已经攒满啦！' : '还差 ¥' + fmt(gap);
 
     const btn = $('boostHelpBtn');
     btn.disabled = true;
     btn.textContent = '✓ 助力成功，感谢你';
 
-    // 换成「自己也去玩」的引导块
     const done = document.createElement('div');
     done.className = 'boost-done';
     done.innerHTML = [
@@ -123,25 +189,24 @@
     const actions = boost.querySelector('.boost-actions');
     actions.parentNode.insertBefore(done, actions);
 
-    const skip = $('boostSkipBtn');
-    skip.textContent = '我也去抽一次 ›';
-    skip.focus();
+    $('boostSkipBtn').focus();
   }
 
+  // 访客决定自己也玩：转成「分享者」身份，把自己的分享参数写进地址栏，
+  // 之后他转发出去的链接才会带参数。
   function goPlay() {
-    // 交给原有页面：显示入口页
+    sess.set(SHARER_KEY, '1');
     SCREENS.forEach((id) => {
       const el = $(id);
       if (el) el.hidden = id !== 'entry';
     });
     boost.hidden = true;
+    syncUrl();
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
   $('boostHelpBtn').addEventListener('click', markHelped);
   $('boostSkipBtn').addEventListener('click', goPlay);
-
-  // Esc 也能跳过（桌面端）
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !boost.hidden) goPlay();
   });

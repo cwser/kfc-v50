@@ -360,3 +360,279 @@
   outline: 2px solid #e8b45c;
   outline-offset: 1px;
 }
+
+/* ==========================================================================
+   5. 后续页面（scan / game / ending）纵向压缩
+   ==========================================================================
+   实测 360x640 上 scan 要 1.49 屏、game 要 1.68 屏，关键操作被推到折叠线以下。
+   这里只压缩留白与字号，不改版式结构。
+   注：转盘是核心视觉，按比例收（300 -> 246），标签半径必须同步换算，
+   否则扇区文字会脱离扇区。
+   ========================================================================== */
+
+/* 只按宽度判定，避免桌面矮窗口（如 1280x700）被误压缩。
+   480px 覆盖全部手机竖屏，桌面/平板不受影响。 */
+@media (max-width: 480px) {
+  /* ---------- scan：小票是最大一块（334px） ---------- */
+  .scan {
+    padding: 12px 0 20px;
+    min-height: auto;
+  }
+  .scan-label {
+    font-size: 12px;
+    padding: 5px 12px;
+  }
+  .scan h2 {
+    font-size: 27px;
+    margin: 10px 0 14px;
+  }
+  .receipt {
+    width: min(100%, 318px);
+    padding: 13px 15px 15px;
+    border-radius: 15px;
+    box-shadow: 0 11px 0 #b51a1f, 0 20px 24px #66031b85;
+  }
+  .receipt-top {
+    padding-bottom: 8px;
+    font-size: 11px;
+  }
+  .receipt-symbol {
+    font-size: 48px;
+    padding: 6px 0 3px;
+  }
+  .receipt-row {
+    padding: 8px 0;
+    font-size: 13px;
+  }
+  .scan-progress {
+    margin: 16px auto 6px;
+    gap: 10px;
+  }
+  .scan-track {
+    height: 10px;
+  }
+  .scan-progress strong {
+    font-size: 17px;
+  }
+  .scan-message {
+    font-size: 13px;
+  }
+  .scan-reveal {
+    margin: 12px 0 0;
+  }
+
+  /* ---------- game：转盘面板 502px + 金额卡 209px ---------- */
+  .game {
+    padding: 0 0 18px;
+  }
+  .ticker {
+    height: 27px;
+    margin: 0 -18px 8px;
+    font-size: 11px;
+    padding: 5px 14px;
+  }
+  .amount-card {
+    padding: 13px 15px 11px;
+    border-radius: 15px;
+    box-shadow: 0 6px 0 #ac141d, 0 11px 17px #74051477;
+  }
+  .amount-top {
+    font-size: 12px;
+  }
+  .amount-top .limit {
+    font-size: 10px;
+    padding: 4px 7px;
+  }
+  .amount {
+    margin: 8px 0 2px;
+  }
+  .amount small {
+    font-size: 25px;
+  }
+  .amount strong {
+    font-size: clamp(46px, 12vw, 58px);
+  }
+  .amount-goal {
+    font-size: 11px;
+  }
+  .amount-goal span:first-child {
+    font-size: 12px;
+  }
+  .cash-track {
+    height: 13px;
+    margin-top: 7px;
+  }
+  .cash-track i {
+    width: 13px;
+    height: 13px;
+    border-width: 2px;
+  }
+  .micro-win {
+    margin-top: 6px;
+    font-size: 12px;
+  }
+  .game-product {
+    margin: 10px 0 9px;
+    min-height: 56px;
+    padding: 6px 10px 6px 2px;
+  }
+  .game-product img {
+    width: 58px;
+    height: 44px;
+  }
+  .game-product b {
+    font-size: 13px;
+  }
+  .game-product small {
+    font-size: 10px;
+    margin-top: 3px;
+  }
+  .game-panel {
+    padding: 13px 11px 15px;
+    border-radius: 18px;
+    box-shadow: inset 0 0 0 2px #fff9ba, 0 7px 0 #9d291c, 0 13px 19px #64081170;
+  }
+  .game-panel-title span:first-child {
+    font-size: 18px;
+  }
+  .chances {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+  .phase-sub {
+    font-size: 12px;
+    margin: 2px 0 7px;
+  }
+
+  /* 转盘 300 -> 246：半径为原尺寸的 0.82 倍，标签位移按 106*0.82≈87 换算 */
+  .wheel-wrap {
+    width: min(100%, 246px);
+    margin: 8px auto 12px;
+  }
+  .wheel-label {
+    width: 62px;
+    font-size: 11px;
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-87px) rotate(var(--reverse));
+  }
+  .wheel-center {
+    width: 62px;
+    height: 62px;
+    border-width: 4px;
+    font-size: 19px;
+  }
+  .wheel-leds {
+    inset: -7px;
+    box-shadow: 0 0 0 3px #c92d20, 0 0 0 6px #ffefa5;
+  }
+  .pointer {
+    top: -18px;
+    border-left-width: 13px;
+    border-right-width: 13px;
+    border-top-width: 26px;
+  }
+  .encouragement {
+    font-size: 12px;
+    margin: 10px 0 0;
+  }
+  .game-panel .primary.action {
+    padding: 14px 18px;
+    font-size: 17px;
+  }
+  .currency-card {
+    margin-top: 13px;
+    padding: 12px;
+  }
+  .currency-head {
+    font-size: 13px;
+  }
+  .currency-bar {
+    height: 11px;
+    margin: 8px 0;
+  }
+  .chain {
+    margin-top: 9px;
+  }
+  .bottom-actions {
+    margin: 13px 0 4px;
+  }
+
+  /* ---------- ending ---------- */
+  .ending {
+    padding: 22px 0 34px;
+    min-height: auto;
+  }
+  .ending-spot {
+    font-size: 74px;
+  }
+  .ending p {
+    font-size: 14px;
+  }
+  .ending h2 {
+    font-size: 34px;
+    margin: 12px 0;
+  }
+  .ending-punch {
+    margin: 20px -2px 26px;
+    padding: 18px 8px;
+    font-size: 25px;
+    box-shadow: 0 7px 0 #9d1321;
+  }
+  .ending-punch strong {
+    font-size: 44px;
+  }
+}
+
+/* 超小屏（<=380px）再收一档：这类机型屏高普遍 640 上下，
+   转盘与金额卡是纵向大头。半径同样按 0.3533 比例换算：214*0.3533≈76 */
+@media (max-width: 380px) {
+  .wheel-wrap {
+    width: min(100%, 214px);
+    margin: 6px auto 10px;
+  }
+  .wheel-label {
+    width: 56px;
+    font-size: 10px;
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-76px) rotate(var(--reverse));
+  }
+  .wheel-center {
+    width: 54px;
+    height: 54px;
+    font-size: 17px;
+  }
+  .wheel-leds {
+    inset: -6px;
+  }
+  .pointer {
+    top: -15px;
+    border-left-width: 11px;
+    border-right-width: 11px;
+    border-top-width: 22px;
+  }
+  .amount-card {
+    padding: 11px 13px 9px;
+  }
+  .amount strong {
+    font-size: clamp(40px, 11vw, 48px);
+  }
+  .amount small {
+    font-size: 22px;
+  }
+  .game-product {
+    min-height: 50px;
+    margin: 8px 0 7px;
+  }
+  .game-product img {
+    width: 50px;
+    height: 38px;
+  }
+  .game-panel {
+    padding: 11px 10px 13px;
+  }
+  .bottom-actions {
+    margin: 10px 0 3px;
+  }
+  .bottom-actions button {
+    padding: 10px 6px;
+    font-size: 12px;
+  }
+}

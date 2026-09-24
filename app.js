@@ -418,6 +418,8 @@
     // 若自己还没抽过（cash=0），用一个接近目标的演出值，否则好友看到「还差 ¥50」很出戏。
     const shareCash = state.cash > 0 ? state.cash : Number((45.5 + Math.random() * 3.4).toFixed(2));
     const url = base + '?from=' + encodeURIComponent(name || '好友') + '&av=' + encodeURIComponent(fmt(shareCash));
+    // 同步到地址栏，保证微信右上角原生分享也用这个带参链接（boost.js 提供）
+    if (typeof window.__kfcSyncShareUrl === 'function') window.__kfcSyncShareUrl();
     const title = '疯狂星期四，帮我看看这份好运';
     if (navigator.share) {
       try {
