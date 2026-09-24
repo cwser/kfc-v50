@@ -23,7 +23,6 @@
   const SHARER_KEY = 'kfc_is_sharer';
   const NAME_KEY = 'kfc_share_name';
   const GOAL = 50;
-  const HELP_GAIN = 0.01;
   const SCREENS = ['entry', 'scan', 'game', 'ending'];
 
   const store = {
@@ -146,7 +145,7 @@
       '  <span>👋</span><span><b></b> 邀请你帮他助力</span>',
       '</div>',
       '<h2>帮 TA 攒到 <em>¥50</em><br>就有机会 0 元拿快乐桶</h2>',
-      '<p class="boost-sub">点一下助力，帮好友离免费快乐桶更近一步。</p>',
+      '<p class="boost-sub">点一下助力，帮好友把 ¥50 攒满。</p>',
       '<div class="boost-card">',
       '  <div class="boost-card-top"><span>TA 的福利金进度</span><span>目标 ¥50.00</span></div>',
       '  <div class="boost-amount"><small>¥</small><strong></strong></div>',
@@ -237,7 +236,7 @@
       '  <div class="boost-modal-art" aria-hidden="true">🎁</div>',
       '  <div class="boost-modal-kicker">助力成功</div>',
       '  <h3 id="boostRewardTitle">你也获得 1 次抽奖机会</h3>',
-      '  <p>你帮好友推进了福利金，系统也为你点亮了 1 次机会。来看看自己能抽到多少。</p>',
+      '  <p>你帮好友攒满了福利金。系统也为你点亮 1 次抽奖机会，来看看自己能抽到多少。</p>',
       '  <button class="boost-modal-primary" id="boostRewardPlay" type="button">马上抽奖 <span aria-hidden="true">›</span></button>',
       '  <button class="boost-modal-secondary" id="boostRewardLater" type="button">稍后再说</button>',
       '</div>',
@@ -269,6 +268,8 @@
   }
 
   // ---------------- 助力点击 ----------------
+  // 一次助力直接把好友的福利金推到目标（原先每点一次只加 ¥0.01，反馈太弱、
+  // 不像「助力成功」）。数字滚动到 ¥50、进度条走到 100%、再落定「已攒满」。
   function markHelped() {
     if (helped) return;
     helped = true;
@@ -283,38 +284,56 @@
     btn.disabled = true;
     btn.textContent = '✓ 助力成功，感谢你';
 
-    // 2) 数值与进度推进（数值带 pop 动画，进度条走 CSS 过渡）
-    current = Math.min(GOAL, Number((current + HELP_GAIN).toFixed(2)));
-    amountStrong.textContent = fmt(current);
+    // 2) 数字滚动：从当前值一路推到目标，进度条同步走到 100%
+    //    （原先每点一次只加 ¥0.01，反馈太弱、不像「助力成功」）
+    const from = current;
+    const gain = Math.max(0, GOAL - from);
+    const duration = prefersReduced() ? 80 : 900;
+    const startedAt = performance.now();
+
     amountStrong.classList.remove('pop');
     void amountStrong.offsetWidth;
     amountStrong.classList.add('pop');
-    track.style.width = Math.min(99.98, (current / GOAL) * 100) + '%';
-    const gap = Math.max(0, GOAL - current);
-    gapEl.textContent = gap <= 0 ? 'TA 已经攒满啦！' : '还差 ¥' + fmt(gap);
-    gapEl.classList.remove('pop');
-    void gapEl.offsetWidth;
-    gapEl.classList.add('pop');
+    gapEl.textContent = '正在助力…';
 
-    // 3) 粒子 + 飘字，让「这一下」有反馈
-    burst(26);
-    floatPlus('+' + fmt(HELP_GAIN));
+    function run(now) {
+      const p = Math.min(1, (now - startedAt) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);          // ease-out
+      const v = from + gain * eased;
+      amountStrong.textContent = fmt(v);
+      track.style.width = Math.min(100, (v / GOAL) * 100) + '%';
+      if (p < 1) {
+        requestAnimationFrame(run);
+        return;
+      }
 
-    // 3.5) 把弹窗里承诺的「1 次抽奖机会」真正兑现（原先只是文案）
+      // 3) 到底：落定「已攒满」态
+      current = GOAL;
+      amountStrong.textContent = fmt(GOAL);
+      track.style.width = '100%';
+      gapEl.textContent = 'TA 已经攒满啦！🎉';
+      gapEl.classList.remove('pop');
+      void gapEl.offsetWidth;
+      gapEl.classList.add('pop');
+      burst(34);
+      floatPlus('+' + fmt(gain));
+      // 4) 稍后弹出「你也获得机会」，先让上面的动效播完
+      setTimeout(showReward, prefersReduced() ? 120 : 700);
+    }
+    requestAnimationFrame(run);
+
+    // 5) 把弹窗里承诺的「1 次抽奖机会」真正兑现（原先只是文案）
     if (typeof window.__kfcGrantSpin === 'function') window.__kfcGrantSpin();
 
-    // 4) 就地留一条成功态说明（弹窗关闭后仍可见）
+    // 6) 就地留一条成功态说明（弹窗关闭后仍可见）
     const done = document.createElement('div');
     done.className = 'boost-done open';
     done.innerHTML = [
       '<b>助力成功！</b>',
-      '<span>你帮好友推进了 ¥' + fmt(HELP_GAIN) + '，并为自己获得 1 次抽奖机会。</span>',
+      '<span>TA 的福利金已攒满 ¥50，你也获得 1 次抽奖机会。</span>',
     ].join('');
     const actions = boost.querySelector('.boost-actions');
     actions.parentNode.insertBefore(done, actions);
-
-    // 5) 稍后弹出「你也获得机会」，先让上面的动效播完
-    setTimeout(showReward, prefersReduced() ? 120 : 620);
   }
 
   // 访客决定自己也玩：转成「分享者」身份，把自己的分享参数写进地址栏，
