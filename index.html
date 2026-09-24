@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#b30919" />
+  <meta name="description" content="疯狂星期四互动挑战：检测近期口味、抽奖累积福利金，看看离 ¥50 还有多远。" />
+  <title>疯狂星期四 · ¥50 快乐桶挑战</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23c81024'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-family='Arial' font-weight='900' font-size='40' fill='white'%3E50%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./style.css" />
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <div class="stage-backdrop" aria-hidden="true"><span>星期四</span><span>¥50</span></div>
+  <main class="app" id="app">
+    <div class="entertainment">娱乐互动 · 非肯德基或拼多多官方活动</div>
+    <header class="header">
+      <div class="brand"><span class="logo"><img src="https://cdn.sanity.io/images/kbqq3e0r/production/afcc23c7797d1ad1d55bd0e200e2128cfe163eba-4096x3802.png?w=180&amp;q=80" alt="KFC 标识" onerror="this.remove();this.parentElement.textContent='KFC'" /></span><span><b>疯狂星期四</b><small>¥50 快乐挑战</small></span></div>
+      <button id="soundBtn" class="sound-btn" type="button" aria-label="打开音效" aria-pressed="false">♪</button>
+    </header>
+
+    <section class="screen entry" id="entry" aria-labelledby="entryTitle">
+      <div class="entry-glow" aria-hidden="true"></div>
+      <div class="entry-badge">今日专属福利已就位</div>
+      <h1 id="entryTitle">你的快乐桶<br><em>可能已经免费了</em></h1>
+      <p class="entry-sub">查查最近的肯德基口味，领取你的抽奖次数。</p>
+      <div class="food-frame"><img src="./chicken-feast.webp" width="1000" height="833" alt="炸鸡、薯条和饮品组成的快乐桶" /><span class="price-stamp">累计 <b>¥50</b><br>0 元免费拿</span></div>
+      <div class="entry-benefit"><span>✦ 口味福利</span><span>✦ 免费抽奖</span><span>✦ 冲刺 50 元</span></div>
+      <button class="primary entry-button" id="scanBtn" type="button">检测最近肯德基消费 <span aria-hidden="true">›</span></button>
+      <p class="entry-bottom">周四的好运，现在开始</p>
+    </section>
+
+    <section class="screen scan" id="scan" aria-labelledby="scanTitle" hidden>
+      <div class="scan-halo" aria-hidden="true"></div>
+      <div class="scan-label">专属福利识别中</div>
+      <h2 id="scanTitle">正在查看你的<br>疯狂星期四足迹</h2>
+      <div class="receipt" id="receipt">
+        <div class="receipt-top"><span>近期消费识别</span><span>THURSDAY</span></div>
+        <div class="receipt-symbol">🍗</div>
+        <div class="receipt-row"><span>口味偏好</span><b id="receiptFlavor">识别中 ···</b></div>
+        <div class="receipt-row"><span>近期产品</span><b id="receiptProduct">识别中 ···</b></div>
+        <div class="receipt-row"><span>福利状态</span><b id="receiptStatus">正在解锁</b></div>
+        <div class="scan-beam" aria-hidden="true"></div>
+      </div>
+      <div class="scan-progress"><div class="scan-track"><span id="scanFill"></span></div><strong id="scanPercent">0%</strong></div>
+      <p id="scanMessage" class="scan-message" role="status">正在匹配近期口味偏好…</p>
+      <div class="scan-reveal" id="scanReveal" hidden>
+        <div class="reveal-flash">识别完成</div>
+        <h3>最近吃过 <span id="detectedProduct">香辣鸡翅</span></h3>
+        <p>为你解锁 <strong>3 次免费抽奖</strong></p>
+        <button class="primary" id="enterGameBtn" type="button">马上抽奖 <span aria-hidden="true">›</span></button>
+      </div>
+    </section>
+
+    <section class="screen game" id="game" aria-labelledby="phaseTitle" hidden>
+      <div class="ticker"><span class="ticker-icon">★</span><span id="tickerText">本轮好运正在加速，距离快乐桶又近了一点</span></div>
+      <div class="amount-card">
+        <div class="amount-top"><span>已累计福利金</span><span class="limit">达到 ¥50 即可 0 元拿</span></div>
+        <div class="amount"><small>¥</small><strong id="cashValue">0.00</strong><span class="amount-shine" aria-hidden="true"></span></div>
+        <div class="amount-goal"><span id="missingText">还差 ¥50.00</span><span>目标 ¥50.00</span></div>
+        <div class="cash-track" role="progressbar" aria-label="福利金进度" aria-valuemin="0" aria-valuemax="50" aria-valuenow="0" id="cashTrack"><span id="cashFill"></span><i id="cashSpark" aria-hidden="true"></i></div>
+        <div class="micro-win" id="microWin">就差一点了，再加把劲！</div>
+      </div>
+      <div class="game-product"><img src="./chicken-feast.webp" width="1000" height="833" alt="快乐桶" /><span><b>金黄酥脆快乐桶</b><small id="productDetail">最近吃过香辣鸡翅的你，手气一定不差</small></span><strong>0 元拿</strong></div>
+
+      <div class="game-panel">
+        <div class="game-panel-title"><span id="phaseTitle">幸运大转盘</span><span class="chances" id="chances">剩余 3 次</span></div>
+        <p class="phase-sub" id="phaseSub">转一转，看看今天能拿到多少福利金</p>
+        <div class="wheel-wrap" id="wheelWrap"><div class="pointer" aria-hidden="true"></div><div class="wheel-leds" aria-hidden="true"></div><div class="wheel" id="wheel" aria-hidden="true"><div id="wheelLabels"></div></div><button class="wheel-center" id="wheelCenter" type="button" aria-label="转动幸运转盘">抽</button></div>
+        <button class="primary action" id="actionBtn" type="button">免费抽奖 · 还剩 3 次</button>
+        <p class="encouragement" id="encouragement" role="status">再抽一次，快乐就到手！</p>
+      </div>
+
+      <div class="currency-card" id="currencyCard" hidden><div class="currency-head"><span>冲刺任务</span><b id="currencyCount">0 / 10 钻石</b></div><div class="currency-bar"><span id="currencyFill"></span></div><p id="currencyRule">集满 10 钻石可兑换最后 ¥0.01</p><div class="chain" id="chain"></div></div>
+      <div class="bottom-actions"><button type="button" id="shareBtn">↗ 分享助力</button><button type="button" id="resetBtn">↺ 重新开始</button></div>
+    </section>
+
+    <section class="screen ending" id="ending" hidden aria-labelledby="endingTitle"><div class="ending-spot">🍗</div><p>经历了转盘、钻石、金币、碎片…</p><h2 id="endingTitle">距离 ¥50<br>永远只差一点</h2><div class="ending-punch">疯狂星期四<br><strong>V 我 50</strong></div><button type="button" class="primary" id="endRestart">换个手气再来</button></section>
+
+    <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true"><div class="modal" id="modal"><button class="modal-close" id="closeModal" type="button" aria-label="关闭">×</button><div id="modalBody"></div></div></div>
+    <div class="effects" id="effects" aria-hidden="true"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </main>
+</body>
+</html>
