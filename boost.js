@@ -68,6 +68,25 @@
     }
   }
 
+  // ------------------------------------------------------------------
+  // 让 iOS 浏览器自动收起底部工具栏
+  // iOS Safari 在页面可滚动且发生滚动时，会自动收起底栏/地址栏，可视高度随之变大。
+  // 这里在加载后与首次触摸时给一个极小的滚动量触发它（1px 位移肉眼不可见）。
+  // 注意：是否生效取决于浏览器与系统版本；微信内联浏览器不保证生效，
+  // 且系统浏览器 UI 本身无法由网页隐藏（iPhone 上 Apple 未开放 Fullscreen API）。
+  // ------------------------------------------------------------------
+  function nudgeToolbarCollapse() {
+    if (document.documentElement.scrollHeight > window.innerHeight + 2) {
+      window.scrollTo(0, 1);
+    }
+  }
+  nudgeToolbarCollapse();
+  window.addEventListener('load', nudgeToolbarCollapse);
+  window.addEventListener('touchstart', function onFirstTouch() {
+    window.removeEventListener('touchstart', onFirstTouch);
+    nudgeToolbarCollapse();
+  }, { passive: true });
+
   const params = new URLSearchParams(location.search);
   const fromParam = (params.get('from') || '').trim();
   const isSharer = sess.get(SHARER_KEY) === '1';

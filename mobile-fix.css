@@ -373,6 +373,34 @@
 /* 只按宽度判定，避免桌面矮窗口（如 1280x700）被误压缩。
    480px 覆盖全部手机竖屏，桌面/平板不受影响。 */
 @media (max-width: 480px) {
+  /* ---------- 顶栏收矮：93 -> 64，省下的 29px 直接让给转盘与主按钮，
+     让它们在「浏览器底栏占掉高度」的情况下仍能落在首屏内 ---------- */
+  .header {
+    height: 64px;
+    padding-top: 14px;
+  }
+  .logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+  .brand b {
+    font-size: 16px;
+  }
+  .brand small {
+    margin-top: 2px;
+    font-size: 10px;
+  }
+  .sound-btn {
+    width: 31px;
+    height: 31px;
+    font-size: 17px;
+  }
+  .entertainment {
+    font-size: 10px;
+    padding: 3px 5px;
+  }
+
   /* ---------- scan：小票是最大一块（334px） ---------- */
   .scan {
     padding: 12px 0 20px;
