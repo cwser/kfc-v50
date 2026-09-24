@@ -1,0 +1,362 @@
+/* ==========================================================================
+   手机端适配修复 + 助力落地页
+   ==========================================================================
+   本文件只做两件事，不改动原有视觉风格：
+   1) 修掉移动端实测出的适配缺陷（价格印章压住炸鸡、小屏首屏看不到主按钮、间距过紧）
+   2) 提供「好友助力落地页」的样式
+   加载顺序在 style.css 之后，靠层叠覆盖，不改原文件。
+   ========================================================================== */
+
+/* 只在手机宽度下改印章位置；宽屏保持原样式，避免负偏移溢出卡片 */
+@media (max-width: 680px) {
+  .entry .food-frame {
+    position: relative;
+  }
+  .entry .food-frame .price-stamp {
+    right: 4px;
+    top: -2px;
+    width: 70px;
+    height: 70px;
+    font-size: 10px;
+    line-height: 1.26;
+    z-index: 3;
+  }
+  .entry .food-frame .price-stamp b {
+    font-size: 19px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 紧凑化首屏：小屏（<= 680px 高为主的中低端机）要在首屏露出主按钮。
+      手段是收掉纵向的冗余留白，不缩小核心视觉元素。
+   -------------------------------------------------------------------------- */
+@media (max-width: 420px) {
+  .entry {
+    padding: 14px 0 16px;
+    min-height: auto;
+  }
+  .entry-badge {
+    font-size: 12px;
+    padding: 5px 12px;
+  }
+  .entry h1 {
+    margin: 12px -4px 8px;
+    font-size: clamp(34px, 9.4vw, 44px);
+    line-height: 1.1;
+  }
+  .entry-sub {
+    font-size: 14px;
+  }
+  .food-frame {
+    height: 236px;
+    margin: 0 -10px;
+  }
+  .food-frame img {
+    width: min(88%, 330px);
+    max-height: 236px;
+  }
+  .entry-benefit {
+    margin: 2px 0 14px;
+    gap: 6px;
+  }
+  .entry-benefit span {
+    font-size: 11px;
+    padding: 5px 9px;
+  }
+  .entry-button {
+    padding: 15px 20px;
+    font-size: 17px;
+  }
+  .entry-bottom {
+    margin: 14px 0 0;
+    font-size: 11px;
+  }
+}
+
+/* 超窄 / 矮屏：进一步压缩，保证主按钮可见 */
+@media (max-width: 374px), (max-height: 660px) {
+  .entry h1 {
+    font-size: clamp(31px, 9vw, 38px);
+  }
+  .food-frame {
+    height: 200px;
+  }
+  .food-frame img {
+    width: min(84%, 290px);
+    max-height: 200px;
+  }
+  .entry .food-frame .price-stamp {
+    right: 2px;
+    top: -2px;
+    width: 64px;
+    height: 64px;
+    font-size: 10px;
+  }
+  .entry .food-frame .price-stamp b {
+    font-size: 17px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. 助力落地页
+      好友带 ?from=昵称 进来先看到这里：显示对方进度 + 帮他助力。
+      纯前端展示，无后端。
+   -------------------------------------------------------------------------- */
+.boost {
+  text-align: center;
+  padding: 18px 0 30px;
+  min-height: calc(100dvh - 100px);
+}
+
+.boost-from {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #ffe59caa;
+  border-radius: 100px;
+  background: #ffda6f38;
+  color: #fff4c2;
+  padding: 7px 15px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+.boost-from b {
+  color: #ffec95;
+  font-weight: 1000;
+}
+
+.boost h2 {
+  margin: 16px -6px 8px;
+  font-size: clamp(30px, 8.4vw, 40px);
+  line-height: 1.16;
+  font-weight: 1000;
+  letter-spacing: -0.07em;
+  text-shadow: 0 3px 5px #7e091b80;
+}
+.boost h2 em {
+  font-style: normal;
+  color: #ffec95;
+}
+
+.boost-sub {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 700;
+  color: #fff2de;
+}
+
+/* 对方进度卡 */
+.boost-card {
+  position: relative;
+  overflow: hidden;
+  margin: 20px auto 0;
+  width: min(100%, 340px);
+  padding: 18px 18px 16px;
+  text-align: left;
+  border-radius: 18px;
+  background: linear-gradient(160deg, #fffef4, #ffe8bd);
+  color: #5d241d;
+  border: 2px solid #ffdd9a;
+  box-shadow: 0 8px 0 #ac141d, 0 15px 23px #74051477;
+}
+.boost-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 850;
+}
+.boost-card-top span:last-child {
+  color: #be271a;
+  background: #ffdf8d;
+  border-radius: 100px;
+  padding: 4px 9px;
+  font-size: 11px;
+}
+.boost-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin: 12px 0 6px;
+  color: #d91620;
+  font-variant-numeric: tabular-nums;
+  font-weight: 1000;
+  text-shadow: 0 3px #ffddbe;
+}
+.boost-amount small {
+  font-size: 26px;
+  margin-right: 2px;
+}
+.boost-amount strong {
+  font-size: clamp(44px, 12vw, 58px);
+  letter-spacing: -0.08em;
+}
+.boost-track {
+  position: relative;
+  height: 14px;
+  background: #eec9a0;
+  border-radius: 30px;
+  border: 2px solid #edb77a;
+  overflow: hidden;
+}
+.boost-track > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #ffa723, #e42520);
+  border-radius: 30px;
+  transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.boost-gap {
+  margin: 9px 0 0;
+  font-size: 13px;
+  font-weight: 850;
+  color: #be251d;
+  text-align: center;
+}
+
+/* 助力按钮组 */
+.boost-actions {
+  margin: 22px auto 0;
+  width: min(100%, 340px);
+}
+.boost-help {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fff8ab, #ffc93f 68%, #ffa22b);
+  color: #9a1820;
+  padding: 16px 20px;
+  font-size: 18px;
+  font-weight: 1000;
+  letter-spacing: -0.035em;
+  box-shadow: 0 7px 0 #c66d19, 0 14px 26px #600a174a;
+  text-shadow: 0 1px #ffffff75;
+  transition: transform 0.14s, box-shadow 0.14s;
+}
+.boost-help:active {
+  transform: translateY(5px);
+  box-shadow: 0 2px 0 #c66d19, 0 5px 12px #600a174a;
+}
+.boost-help:disabled {
+  /* 助力成功后按钮留在原位作状态反馈，但要弱化到不抢眼 */
+  background: #ffffff26;
+  border: 1px solid #ffffff5c;
+  color: #ffe6c0;
+  box-shadow: none;
+  opacity: 1;
+  cursor: default;
+  transform: none;
+  text-shadow: none;
+  font-size: 15px;
+}
+
+.boost-skip {
+  margin-top: 12px;
+  width: 100%;
+  background: #ffffff22;
+  border: 1px solid #fff7;
+  color: #fff;
+  border-radius: 10px;
+  padding: 12px 10px;
+  font-size: 14px;
+  font-weight: 800;
+}
+.boost-skip:active {
+  background: #ffffff33;
+}
+
+/* 助力成功态 */
+.boost-done {
+  margin: 18px auto 0;
+  width: min(100%, 340px);
+  padding: 15px 16px;
+  border-radius: 15px;
+  background: #fff6d9;
+  border: 2px solid #ffe49d;
+  color: #8f3927;
+  box-shadow: 0 6px 12px #7600193d;
+}
+.boost-done b {
+  display: block;
+  font-size: 15px;
+  color: #cf251f;
+  margin-bottom: 5px;
+}
+.boost-done span {
+  display: block;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.boost-note {
+  margin: 22px 0 0;
+  font-size: 11px;
+  line-height: 1.65;
+  color: #ffdfd0;
+}
+
+@media (max-width: 374px), (max-height: 660px) {
+  .boost {
+    padding: 12px 0 22px;
+  }
+  .boost h2 {
+    font-size: clamp(27px, 8vw, 34px);
+    margin: 13px -4px 7px;
+  }
+  .boost-card {
+    margin-top: 16px;
+    padding: 15px 15px 14px;
+  }
+  .boost-actions {
+    margin-top: 17px;
+  }
+  .boost-help {
+    padding: 14px 18px;
+    font-size: 17px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. 分享弹窗里的昵称输入行
+   -------------------------------------------------------------------------- */
+.share-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #e8d1bb;
+}
+.share-name-row > span {
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 850;
+  color: #a8603f;
+}
+.share-name-row > input {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-top: 0 !important;
+  border: 1px solid #e9c9a3 !important;
+  border-radius: 8px !important;
+  background: #fffdf6;
+  padding: 9px 10px !important;
+  font: inherit;
+  font-size: 14px;
+  color: #632822;
+}
+.share-name-row > input::placeholder {
+  color: #bfa08a;
+}
+.share-name-row > input:focus-visible {
+  outline: 2px solid #e8b45c;
+  outline-offset: 1px;
+}

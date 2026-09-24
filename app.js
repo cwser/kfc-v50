@@ -253,7 +253,20 @@
     $('overlay').className = 'overlay open' + (share ? ' sheet' : '');
     $('overlay').setAttribute('aria-hidden','false');
     const meter = options.meter == null ? '' : '<div class="modal-meter"><span style="width:' + Math.min(options.meter,99.98) + '%"></span></div>';
-    const preview = share ? '<div class="share-preview"><b>朋友，帮我看看这份疯四好运！</b><br>我离 ¥50 快乐桶只差一点点，点开看看你能抽到多少。<input id="manualLink" type="text" readonly hidden aria-label="分享链接"></div>' : '';
+    // 分享弹窗里带一个昵称输入框，好友落地页会显示「XX 邀请你帮他助力」
+    let savedName = '';
+    try { savedName = localStorage.getItem('kfc_share_name') || ''; } catch {}
+    const preview = share
+      ? '<div class="share-preview">' +
+        '<label class="share-name-row" for="shareName">' +
+        '<span>你的昵称</span>' +
+        '<input id="shareName" type="text" maxlength="12" autocomplete="off" ' +
+        'placeholder="填了好友才知道是谁" value="' + savedName.replace(/"/g, '&quot;') + '">' +
+        '</label>' +
+        '<b>朋友，帮我看看这份疯四好运！</b><br>我离 ¥50 快乐桶只差一点点，点开看看你能抽到多少。' +
+        '<input id="manualLink" type="text" readonly hidden aria-label="分享链接">' +
+        '</div>'
+      : '';
     $('modalBody').innerHTML =
       '<div class="modal-top">' + (options.kicker || '幸运加成') + '</div>' +
       '<h2 id="modalTitle">' + options.title + '</h2>' +
@@ -385,8 +398,26 @@
     });
   }
 
+  // 把用户填的昵称记在本地，下次分享不用重填
+  function getShareName() {
+    let name = '';
+    try { name = localStorage.getItem('kfc_share_name') || ''; } catch {}
+    return name.trim().slice(0, 12);
+  }
+  function setShareName(name) {
+    try { localStorage.setItem('kfc_share_name', String(name || '').trim().slice(0, 12)); } catch {}
+  }
+
   async function sharePage(grant = true) {
-    const url = location.href.split('#')[0];
+    const base = location.href.split('#')[0].split('?')[0];
+    // 昵称：优先取用户在分享弹窗里填的，没填就退回「好友」
+    const input = $('shareName');
+    const name = ((input && input.value) || getShareName() || '').trim().slice(0, 12);
+    if (name) setShareName(name);
+    // 带上助力参数：好友点进来会先看到「帮 TA 助力」落地页。
+    // 若自己还没抽过（cash=0），用一个接近目标的演出值，否则好友看到「还差 ¥50」很出戏。
+    const shareCash = state.cash > 0 ? state.cash : Number((45.5 + Math.random() * 3.4).toFixed(2));
+    const url = base + '?from=' + encodeURIComponent(name || '好友') + '&av=' + encodeURIComponent(fmt(shareCash));
     const title = '疯狂星期四，帮我看看这份好运';
     if (navigator.share) {
       try {
