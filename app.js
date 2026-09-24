@@ -471,7 +471,7 @@
       icon:'🤝',description:'分享你的疯狂星期四挑战，邀请好友也来试试手气。',
       primary:'分享挑战链接',
       onPrimary:async () => {if (await sharePage(false)) closeModal()},
-      secondary:'继续抽奖',onSecondary:closeModal
+      secondary:'继续抽奖',onSecondary:closeAndDraw
     });
   }
 
