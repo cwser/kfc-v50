@@ -290,6 +290,23 @@
     if (lastFocus && lastFocus.isConnected) lastFocus.focus();
   }
 
+  // 「继续抽奖 / 马上抽奖 / 继续冲刺」这类按钮：关掉弹窗后**立即再抽一次**。
+  // 这些按钮原先只绑了 closeModal，点下去仅把弹窗关掉、并不会抽奖，
+  // 用户看到次数还在却「点抽奖没反应」（实测：转盘不转、金额不变）。
+  // 等弹窗退场再抽，避免两层动画叠在一起；若转盘仍在转则稍后重试。
+  function closeAndDraw() {
+    closeModal();
+    let tries = 0;
+    const tick = () => {
+      if (state.busy) {
+        if (++tries <= 12) setTimeout(tick, 150);
+        return;
+      }
+      handleAction();
+    };
+    setTimeout(tick, reducedMotion() ? 60 : 260);
+  }
+
   function rewardModal(value, title, description, primary, onPrimary, hint) {
     celebrate(26);
     floatPlus(value);
@@ -317,7 +334,7 @@
       const primary = state.cashSpin === 3 ? '邀请好友 · 领取抽奖机会' :
                       state.cashSpin === 4 ? '进入钻石冲刺' : '继续抽奖';
       const next = state.cashSpin === 3 ? () => {closeModal();openShareGate('cash')} :
-                   state.cashSpin === 4 ? unlockDiamond : closeModal;
+                   state.cashSpin === 4 ? unlockDiamond : closeAndDraw;
       setEncouragement(state.cashSpin >= 3 ? '真的只差一点了！继续加油' : '这一抽太幸运了，继续！');
       setTimeout(() => rewardModal('+¥' + fmt(won),title,description,primary,next,
         state.cashSpin === 3 ? '预计再抽 1 次，就能接近 ¥50' : '下一次可能更幸运'),reducedMotion()?150:600);
@@ -342,7 +359,7 @@
       description:'福利金已到 ¥49.99。集满 10 颗钻石，就能兑换最后 ¥0.01！',
       hint:'最后一分钱，冲刺一下就到手',
       primary:'开始攒钻石',
-      onPrimary:closeModal,
+      onPrimary:closeAndDraw,
       meter:99.98
     });
   }
@@ -367,7 +384,7 @@
         description:last?'就差最后 1 ' + current + '，邀请好友再抽一把，马上兑换。':'当前已集到 8/10 ' + current + '，下一抽非常关键！',
         hint:last?'只差一点了，你已经非常接近目标':'再抽一次，冲向最后一格',
         primary:last?'冲刺最后 1 ' + current:'继续抽奖',
-        onPrimary:last?() => {closeModal();openShareGate('tier')}:closeModal,
+        onPrimary:last?() => {closeModal();openShareGate('tier')}:closeAndDraw,
         meter:90
       }),reducedMotion()?80:350);
     });
@@ -390,7 +407,7 @@
         description:'福利加码！集满 10 ' + unit(state.tier) + '，即可兑换最后 1 ' + old + '。只差一步了！',
         hint:'距离 ¥50 又近了一点',
         primary:'继续冲刺',
-        onPrimary:closeModal,
+        onPrimary:closeAndDraw,
         secondary:state.tier>=3?'我不抽了，看看结果':null,
         onSecondary:state.tier>=3?showEnding:null,
         meter:(state.cash/50)*100
@@ -480,7 +497,7 @@
           openModal({
             kicker:'加速机会已到账',title:'额外抽奖 +1 次',icon:'🎟️',value:'+1 次',
             description:'继续转动幸运转盘，看看距离 ¥50 还差多少。',
-            primary:'马上抽奖',onPrimary:closeModal,meter:(state.cash/50)*100
+            primary:'马上抽奖',onPrimary:closeAndDraw,meter:(state.cash/50)*100
           });
         } else {
           toast('最后一抽已开启');
@@ -497,6 +514,14 @@
     if (state.tier < 0) spinCash();
     else spinTier();
   }
+
+  // 供助力页调用：访客帮好友助力后，真的给一次抽奖机会。
+  // 助力页弹窗写着「你也获得 1 次抽奖机会」，此前只弹文案、并未真的加次数（空承诺）。
+  window.__kfcGrantSpin = function () {
+    state.spinsLeft += 1;
+    updateGame();
+    return state.spinsLeft;
+  };
 
   function showEnding() {
     closeModal();

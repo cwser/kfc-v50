@@ -300,6 +300,9 @@
     burst(26);
     floatPlus('+' + fmt(HELP_GAIN));
 
+    // 3.5) 把弹窗里承诺的「1 次抽奖机会」真正兑现（原先只是文案）
+    if (typeof window.__kfcGrantSpin === 'function') window.__kfcGrantSpin();
+
     // 4) 就地留一条成功态说明（弹窗关闭后仍可见）
     const done = document.createElement('div');
     done.className = 'boost-done open';
